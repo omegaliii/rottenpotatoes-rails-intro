@@ -11,17 +11,18 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @all_ratings = ['G','PG','PG-13','R']
-    @sort = params[:sort]
+    @sort = params[:sort] || session[:sort]
 
-    if params.has_key?("ratings")
-      ratings =  params["ratings"].keys
-      @movies = Movie.with_ratings(ratings).order(params[:sort])
-    else
-      ratings = []
-      @movies = Movie.order(params[:sort]).all
+    @all_ratings = Movie.all_ratings
+    @checked_ratings = params[:ratings] || session[:ratings] || Hash[@all_ratings.collect { |r| [r, 1] }]
+
+    if params[:sort] != session[:sort] || params[:ratings] != session[:ratings]
+      session[:sort] = @sort
+      session[:ratings] = @checked_ratings
+      redirect_to :sort => @sort, :ratings => @checked_ratings and return
     end
-    
+
+    @movies = Movie.with_ratings(@checked_ratings.keys).order(@sort)
   end
 
   def new
